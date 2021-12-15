@@ -2,15 +2,31 @@ import cheerio from "cheerio";
 import axios from "axios";
 import json2csv from "json2csv";
 import * as fsp from "fs/promises";
+import * as fs from "fs";
+import * as path from "path";
 
-const getPopulationData = async (): Promise<Array<any>> => {
+const downloadData = async (): Promise<string> => {
 	const targetUrl = "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population";
-	const pageResponse = await axios.get(targetUrl);
+  const tempPath = path.resolve("./country_data.tmp.html");
 
+  const cacheExists = fs.existsSync(tempPath);
+
+  if (!cacheExists) {
+    console.info(`Downloading ${targetUrl}`);
+    const response = await axios.get(targetUrl);
+    await fsp.writeFile(tempPath, response.data, { encoding: "utf-8" });
+    return response.data;
+  }
+
+  console.info(`Using cache`);
+  return fsp.readFile(tempPath, { encoding: "utf-8" });
+}
+
+const getPopulationData = async (content: string): Promise<Array<any>> => {
   const keys = [];
   const result = [];
 
-  const $ = cheerio.load(pageResponse.data);
+  const $ = cheerio.load(content);
 
   $("table.wikitable")
   .find("tr")
@@ -47,4 +63,6 @@ const saveCsv = async (countries: Array<any>) => {
   await fsp.writeFile("./output.csv", csv, { encoding: "utf-8" });
 };
 
-getPopulationData().then(saveCsv);
+downloadData()
+  .then(getPopulationData)
+  .then(saveCsv);
