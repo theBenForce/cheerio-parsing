@@ -1,6 +1,7 @@
 import cheerio from "cheerio";
 import axios from "axios";
-
+import json2csv from "json2csv";
+import * as fsp from "fs/promises";
 
 const getPopulationData = async (): Promise<Array<any>> => {
 	const targetUrl = "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population";
@@ -37,4 +38,13 @@ const getPopulationData = async (): Promise<Array<any>> => {
   return result;
 };
 
-getPopulationData().then((results) => console.info(`Found ${results.length} results`));
+const saveCsv = async (countries: Array<any>) => {
+  console.info(`Saving ${countries.length} records`);
+
+  const j2cp = new json2csv.Parser();
+  const csv = j2cp.parse(countries);
+
+  await fsp.writeFile("./output.csv", csv, { encoding: "utf-8" });
+};
+
+getPopulationData().then(saveCsv);
