@@ -10,6 +10,7 @@
     "json2csv": "^5.0.6"
   },
   "devDependencies": {
+    "@types/node": "^16.11.13",
     "esbuild": "^0.14.5",
     "esbuild-runner": "^2.2.1",
     "typescript": "^4.5.4"
